@@ -3,17 +3,17 @@
   <h1 align="center">BAGS: Blur Agnostic Gaussian Splatting through Multi-Scale Kernel Modeling</h1>
   <p align="center">
     <a href="https://sites.google.com/view/cheng-peng/home">Cheng Peng*</a>
-    ·
+    ,
     <a href="https://github.com/snldmt/">Yutao Tang*</a>
-    ·
+    ,
     <a href="javascript:void(0)">Yifan Zhou</a>
-    ·
+    ,
     <a href="javascript:void(0)">Nengyu Wang</a>
-    ·
+    ,
     <a href="javascript:void(0)">Xijun Liu</a>
-    .
+    ,
     <a href="javascript:void(0)">Deming Li</a>
-    .
+    ,
     <a href="https://aiem.jhu.edu/lab-members/">Rama Chellappa</a>
     <br>(*Equal contribution)<br>
 
