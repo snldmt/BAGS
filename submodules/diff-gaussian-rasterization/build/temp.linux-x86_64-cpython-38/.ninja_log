@@ -1,0 +1,6 @@
+# ninja log v5
+2	3061	1707803022466762352	/cis/home/cpeng/deblur-mip-splatting-depth/submodules/diff-gaussian-rasterization/build/temp.linux-x86_64-cpython-38/cuda_rasterizer/forward.o	6cc4d0a4ced88587
+1	3154	1707803022574761687	/cis/home/cpeng/deblur-mip-splatting-depth/submodules/diff-gaussian-rasterization/build/temp.linux-x86_64-cpython-38/cuda_rasterizer/backward.o	6922f06e3ec58951
+2	7199	1707803026616736803	/cis/home/cpeng/deblur-mip-splatting-depth/submodules/diff-gaussian-rasterization/build/temp.linux-x86_64-cpython-38/cuda_rasterizer/rasterizer_impl.o	2a6435e1fef5f0b5
+2	18880	1707803038278665007	/cis/home/cpeng/deblur-mip-splatting-depth/submodules/diff-gaussian-rasterization/build/temp.linux-x86_64-cpython-38/ext.o	de94f8f41da4eb9d
+2	43480	1707803062896513450	/cis/home/cpeng/deblur-mip-splatting-depth/submodules/diff-gaussian-rasterization/build/temp.linux-x86_64-cpython-38/rasterize_points.o	879f9399ae0de55c
