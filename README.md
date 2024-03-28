@@ -28,6 +28,7 @@ This is the official implementation of the paper, [BAGS: Blur Agnostic Gaussian 
 
 ### TODO List
 - [ ] Upload config files for each scene.
+- [ ] Update code for deblurring at high resolution.
 
 
 ## Method Overview
