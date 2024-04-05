@@ -42,7 +42,7 @@ class GaussianModel:
 
         self.rotation_activation = torch.nn.functional.normalize
 
-    def __init__(self, sh_degree : int, inp_shape=[1,1,1], ks1=5, ks2=9, ks3=17):
+    def __init__(self, sh_degree : int, inp_shape=[1,1,1], ks1=5, ks2=9, ks3=17, ks_ss=17,not_use_rgbd=False,not_use_pe=False):
         self.active_sh_degree = 0
         self.max_sh_degree = sh_degree  
         self._xyz = torch.empty(0)
@@ -58,8 +58,10 @@ class GaussianModel:
         self.percent_dense = 0
         self.spatial_lr_scale = 0
 
-        self.mlp_rgb_ss = BlurKernel_ss(inp_shape[0],inp_shape[1],inp_shape[2],ks=ks3).to("cuda")
-        self.mlp_rgb_ms = BlurKernel_ms(inp_shape[0],inp_shape[1],inp_shape[2],ks1=ks1,ks2=ks2,ks3=ks3).to("cuda")
+        self.mlp_rgb_ss = BlurKernel_ss(inp_shape[0],inp_shape[1],inp_shape[2],ks=ks_ss,
+                                        not_use_rgbd=not_use_rgbd, not_use_pe=not_use_pe).to("cuda")
+        self.mlp_rgb_ms = BlurKernel_ms(inp_shape[0],inp_shape[1],inp_shape[2],ks1=ks1,ks2=ks2,ks3=ks3,
+                                        not_use_rgbd=not_use_rgbd, not_use_pe=not_use_pe).to("cuda")
 
         self.setup_functions()
 
@@ -259,10 +261,13 @@ class GaussianModel:
             {'params': [self._scaling], 'lr': training_args.scaling_lr, "name": "scaling"},
             {'params': [self._rotation], 'lr': training_args.rotation_lr, "name": "rotation"}
         ]
+        lr = os.environ.get('KERLR', 5e-4)
+        lr = float(lr)
+        print('@@@@@@@@@@@@@@@@@ mlp lr: ', lr)
         for p in self.mlp_rgb_ss.parameters():
-            l += [{'params': [p], 'lr': 5e-4}]
+            l += [{'params': [p], 'lr': lr}]
         for p in self.mlp_rgb_ms.parameters():
-            l += [{'params': [p], 'lr': 5e-4}]
+            l += [{'params': [p], 'lr': lr}]
 
         self.optimizer = torch.optim.Adam(l, lr=0.0, eps=1e-15)
         

@@ -33,7 +33,10 @@ class ParamGroup:
                     group.add_argument("--" + key, ("-" + key[0:1]), default=value, type=t)
             else:
                 if t == bool:
-                    group.add_argument("--" + key, default=value, action="store_true")
+                    if value is False:
+                        group.add_argument("--" + key, default=value, action="store_true")
+                    else:
+                        group.add_argument("--" + key, default=value, action="store_false")
                 else:
                     group.add_argument("--" + key, default=value, type=t)
 
@@ -66,7 +69,7 @@ class ModelParams(ParamGroup):
         self.kernel_size1 = 5
         self.kernel_size2 = 9
         self.kernel_size3 = 17
-        self.use_another_mlp = False
+        self.kernel_size_ss = 17
         super().__init__(parser, "Loading Parameters", sentinel)
 
     def extract(self, args):
@@ -83,7 +86,7 @@ class PipelineParams(ParamGroup):
 
 class OptimizationParams(ParamGroup):
     def __init__(self, parser):
-        self.iterations = 46_000
+        self.iterations = 60_000
         self.position_lr_init = 0.00016
         self.position_lr_final = 0.0000016
         self.position_lr_delay_mult = 0.01
@@ -98,16 +101,20 @@ class OptimizationParams(ParamGroup):
         self.opacity_reset_interval = 3000
         self.densify_from_iter = 500
         self.densify_until_iter = 35_000
-        self.densify_grad_threshold = 0.0002
-        self.init_dgt = 0.0006
-        self.min_opacity = 0.005
         self.ms_steps = 6000
+        self.not_use_rgbd = False
+        self.not_use_pe = False
+        self.init_dgt = 0.0006
+        self.densify_grad_threshold = 0.0002
+        self.init_opacity = -1.0
+        self.min_opacity = 0.005
         self.use_depth_loss = False
         self.depth_loss_alpha = 0.001
         self.use_mask_loss = True
         self.mask_loss_alpha = 0.001
         self.use_rgbtv_loss = False
         self.rgbtv_loss_alpha = 0.001
+        self.use_another_mlp = False
         super().__init__(parser, "Optimization Parameters")
 
 def get_combined_args(parser : ArgumentParser):

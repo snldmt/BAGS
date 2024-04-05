@@ -83,8 +83,13 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
     kernel_size2 = dataset.kernel_size2
     kernel_size3 = dataset.kernel_size3
     print('kernel', kernel_size1, kernel_size2, kernel_size3)
+    kernel_size_ss = dataset.kernel_size_ss
+    print('kernel single scale', kernel_size_ss)
 
-    gaussians = GaussianModel(dataset.sh_degree, inp_shape, ks1=kernel_size1, ks2=kernel_size2, ks3=kernel_size3)
+
+    gaussians = GaussianModel(dataset.sh_degree, inp_shape, 
+                              ks1=kernel_size1, ks2=kernel_size2, ks3=kernel_size3, ks_ss=kernel_size_ss,
+                              not_use_rgbd=opt.not_use_rgbd,not_use_pe=opt.not_use_pe)
     
     scene.load_gaussian(gaussians)
     gaussians.training_setup(opt)
@@ -117,21 +122,29 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
     first_iter += 1
     upsample_iter = [3000, 6000]
 
-    assert opt.ms_steps >= 6000, 'multi-scale training step should be larger than 6000'
+    unfold1 = torch.nn.Unfold(kernel_size=(kernel_size1, kernel_size1),
+                                padding=kernel_size1 // 2).cuda()
+    unfold2 = torch.nn.Unfold(kernel_size=(kernel_size2, kernel_size2),
+                                padding=kernel_size2 // 2).cuda()
+    unfold3 = torch.nn.Unfold(kernel_size=(kernel_size3, kernel_size3),
+                                padding=kernel_size3 // 2).cuda()    
+    
+    if kernel_size_ss != kernel_size3:
+        opt.use_another_mlp = True
+        unfold_ss = torch.nn.Unfold(kernel_size=(kernel_size_ss, kernel_size_ss),
+                                    padding=kernel_size_ss // 2).cuda()
+    else:
+        unfold_ss = unfold3
+
+    assert opt.ms_steps >= 6000
     print('************** position_lr_max_steps', opt.position_lr_max_steps)
     print('************** densify_until_iter', opt.densify_until_iter)
     print('************** init densify_grad_threshold', opt.init_dgt)
     print('************** densify_grad_threshold', opt.densify_grad_threshold)
     print('************** min_opacity', opt.min_opacity)
     print('************** ms_steps', opt.ms_steps)
+    print('mask_loss', opt.use_mask_loss, 'depth_loss', opt.use_depth_loss, 'rgbtv_loss', opt.use_rgbtv_loss)
 
-
-    unfold1 = torch.nn.Unfold(kernel_size=(kernel_size1, kernel_size1),
-                                padding=kernel_size1 // 2).cuda()
-    unfold2 = torch.nn.Unfold(kernel_size=(kernel_size2, kernel_size2),
-                                padding=kernel_size2 // 2).cuda()
-    unfold3 = torch.nn.Unfold(kernel_size=(kernel_size3, kernel_size3),
-                                padding=kernel_size3 // 2).cuda()
 
     for iteration in range(first_iter, opt.iterations + 1):        
         if iteration in upsample_iter:
@@ -241,17 +254,17 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
                     mask = mask[0]
 
                 else:
-                    if ori_iter > opt.ms_steps:
-                        if dataset.use_another_mlp:
-                            kernel_weights, mask = gaussians.mlp_rgb_ss(cam_idx, pos_enc, torch.cat([shuffle_rgb,shuffle_depth],1).detach(),iteration)
-                        else:
-                            kernel_weights, mask = gaussians.mlp_rgb_ms(cam_idx, pos_enc, torch.cat([shuffle_rgb,shuffle_depth],1).detach(),ori_iter)
+                    if (ori_iter > opt.ms_steps) and opt.use_another_mlp:
+                        kernel_weights, mask = gaussians.mlp_rgb_ss(cam_idx, pos_enc, torch.cat([shuffle_rgb,shuffle_depth],1).detach(),iteration)
+                        patches = unfold_ss(shuffle_rgb)
+                        patches = patches.view(1, 3, kernel_size_ss ** 2, shuffle_rgb.shape[-2],
+                                                shuffle_rgb.shape[-1])
                     else:
                         kernel_weights, mask = gaussians.mlp_rgb_ms(cam_idx, pos_enc, torch.cat([shuffle_rgb,shuffle_depth],1).detach(),ori_iter)
-
-                    patches = unfold3(shuffle_rgb)
-                    patches = patches.view(1, 3, kernel_size3 ** 2, shuffle_rgb.shape[-2],
-                                           shuffle_rgb.shape[-1])
+                        patches = unfold3(shuffle_rgb)
+                        patches = patches.view(1, 3, kernel_size3 ** 2, shuffle_rgb.shape[-2],
+                                            shuffle_rgb.shape[-1])
+                    
                     kernel_weights = kernel_weights.unsqueeze(1)
                     rgb = torch.sum(patches * kernel_weights, 2)[0] 
                     mask = mask[0]
@@ -303,9 +316,14 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
                     size_threshold = 20 if iteration > opt.opacity_reset_interval else None # reset interval = 3000
                     
                     if ori_iter <= opt.ms_steps:
-                        gaussians.densify_and_prune(opt.init_dgt, opt.min_opacity, scene.cameras_extent, size_threshold)
+                        dgt = opt.densify_grad_threshold if opt.init_dgt < 0 else opt.init_dgt                        
+                        min_opacity = opt.min_opacity if opt.init_opacity < 0 else opt.init_opacity
                     else:
-                        gaussians.densify_and_prune(opt.densify_grad_threshold, opt.min_opacity, scene.cameras_extent, size_threshold)
+                        dgt = opt.densify_grad_threshold
+                        min_opacity = opt.min_opacity
+
+                    gaussians.densify_and_prune(dgt, min_opacity, scene.cameras_extent, size_threshold)
+
 
                     gaussians.compute_3D_filter(cameras=trainCameras)
 

@@ -27,7 +27,7 @@ This is the official implementation of the paper, [BAGS: Blur Agnostic Gaussian 
 
 
 ### TODO List
-- [ ] Upload config files for each scene.
+- [x] Upload config files for each scene. They are inside `scripts/` and `scripts_mip360/`.
 - [ ] Update code for deblurring at high resolution.
 
 
@@ -92,6 +92,7 @@ To calculate metrics, namely PSNR, SSIM, and LPIPS, we could execute the followi
 scene=defocuscaps
 OMP_NUM_THREADS=4 CUDA_VISIBLE_DEVICES=0 python metrics.py -m deblurdata/${scene} -r 4
 ```
+If testing on Deblur-NeRF datasets, we should also add `-t deblur-nerf` at the end of the code chunk above.
 
 
 ## Acknowledgements
