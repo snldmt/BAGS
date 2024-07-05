@@ -1,7 +1,9 @@
 <p align="center">
 
-  <h1 align="center">BAGS: Blur Agnostic Gaussian Splatting through Multi-Scale Kernel Modeling</h1>
-  <h2 align="center">ECCV 2024</h2>
+  <h1 align="center">
+  BAGS: Blur Agnostic Gaussian Splatting through Multi-Scale Kernel Modeling
+  ECCV 2024
+  </h1>
   <p align="center">
     <a href="https://sites.google.com/view/cheng-peng/home">Cheng Peng*</a>
     ,
